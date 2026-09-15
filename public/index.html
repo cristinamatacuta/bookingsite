@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A date with Cristina</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --paper: #FBF5F0;
+    --paper-dim: #F0E4E6;
+    --ink: #3A2430;
+    --ink-soft: #6E5460;
+    --rose: #B98290;
+    --rose-deep: #6E2A38;
+    --coral: #8C3B44;
+    --line: rgba(110,42,56,0.16);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+
+  .card{
+    width:100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 40px 28px 32px;
+    position:relative;
+    min-height: 520px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* subtle stationery corner marks instead of generic rounded-card shadow */
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    width:10px; height:10px;
+    border: 1px solid var(--rose-deep);
+  }
+  .card::before{ top:10px; left:10px; border-right:none; border-bottom:none; }
+  .card::after{ bottom:10px; right:10px; border-left:none; border-top:none; }
+
+  .progress{
+    display:flex;
+    gap:6px;
+    margin-bottom: 28px;
+  }
+  .progress span{
+    flex:1;
+    height:2px;
+    background: var(--line);
+  }
+  .progress span.done{ background: var(--rose-deep); }
+
+  .step{ display:none; flex:1; flex-direction:column; }
+  .step.active{ display:flex; }
+
+  .eyebrow{
+    font-size: 13px;
+    color: var(--rose-deep);
+    margin: 0 0 6px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+  }
+
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 0 0 14px;
+  }
+
+  h1 em{
+    font-style: italic;
+    color: var(--rose-deep);
+  }
+
+  p.lede{
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+  }
+
+  .seal{
+    width: 64px; height:64px;
+    border-radius: 50%;
+    border: 1.5px solid var(--rose-deep);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom: 20px;
+    font-family:'Fraunces', serif;
+    font-size: 26px;
+    color: var(--rose-deep);
+  }
+
+  .field{ margin-bottom: 18px; }
+  .field label{
+    display:block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    border:none;
+    border-bottom: 1.5px solid var(--line);
+    background: transparent;
+    padding: 8px 2px;
+    font-size: 16px;
+    font-family: 'Work Sans', sans-serif;
+    color: var(--ink);
+    outline:none;
+  }
+  .field input:focus, .field textarea:focus{
+    border-bottom-color: var(--rose-deep);
+  }
+  .field textarea{ resize: vertical; min-height: 64px; }
+
+  .toggle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .toggle-row:last-of-type{ border-bottom:none; }
+  .toggle-row span{ font-size: 15px; }
+  .toggle-btns{ display:flex; gap:8px; }
+  .toggle-btns button{
+    border:1px solid var(--line);
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family:'Work Sans', sans-serif;
+    color: var(--ink-soft);
+    cursor:pointer;
+  }
+  .toggle-btns button.selected{
+    background: var(--rose-deep);
+    border-color: var(--rose-deep);
+    color: #fff;
+  }
+
+  .spacer{ flex:1; }
+
+  .btn{
+    width:100%;
+    background: var(--rose-deep);
+    color:#fff;
+    border:none;
+    padding: 15px;
+    font-size: 15px;
+    font-family:'Work Sans', sans-serif;
+    font-weight: 500;
+    cursor:pointer;
+    letter-spacing: 0.2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin-top: 12px;
+  }
+  .btn:disabled{ background: var(--line); color: var(--ink-soft); cursor:not-allowed; }
+  .btn.ghost{
+    background: transparent;
+    color: var(--rose-deep);
+    border: 1px solid var(--rose-deep);
+  }
+
+  .back-link{
+    background:none; border:none; color:var(--ink-soft);
+    font-size:13px; cursor:pointer; padding:0; margin-bottom:18px;
+    align-self:flex-start;
+    font-family:'Work Sans', sans-serif;
+  }
+
+  /* calendar */
+  .cal-header{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom: 14px;
+  }
+  .cal-header span{ font-family:'Fraunces', serif; font-size:18px; }
+  .cal-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 22px;
+  }
+  .cal-grid .dow{
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align:center;
+    padding-bottom: 6px;
+  }
+  .cal-day{
+    aspect-ratio: 1;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 14px;
+    border-radius: 50%;
+    cursor:pointer;
+    color: var(--ink);
+  }
+  .cal-day.empty{ visibility:hidden; }
+  .cal-day.selected{ background: var(--rose-deep); color:#fff; }
+  .cal-day:hover:not(.empty):not(.selected){ background: var(--paper-dim); }
+
+  .cal-day.full{
+    color: var(--line);
+    text-decoration: line-through;
+    cursor: default;
+  }
+  .day-full-tag{
+    font-size: 9px;
+    color: var(--rose);
+    text-align:center;
+    margin-top: -3px;
+  }
+  .cal-cell{ display:flex; flex-direction:column; align-items:center; }
+
+  .chosen-date{
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .times-wrap{
+    margin: 4px 0 18px;
+  }
+  .times-label{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .time-slots{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .time-slot{
+    border: 1px solid var(--line);
+    background: transparent;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family:'Work Sans', sans-serif;
+    color: var(--ink);
+    cursor:pointer;
+  }
+  .time-slot.selected{
+    background: var(--rose-deep);
+    border-color: var(--rose-deep);
+    color:#fff;
+  }
+  .time-slot.taken{
+    color: var(--line);
+    border-color: var(--line);
+    text-decoration: line-through;
+    cursor: default;
+  }
+
+  .confirm-seal{
+    font-family:'Fraunces', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .note{
+    font-size: 13px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    margin-top: 24px;
+    padding-top: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="progress" id="progress">
+    <span class="done"></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- STEP 1: intro -->
+  <div class="step active" id="step-1">
+    <div class="seal">C</div>
+    <p class="eyebrow">Round one — complete</p>
+    <h1>You passed the <em>first phase.</em></h1>
+    <p class="lede">Congratulations. Out of everyone who applied, you're through to round two: an actual date with Cristina. Spots are limited, so let's find a day.</p>
+    <div class="spacer"></div>
+    <button class="btn" onclick="goTo(2)">Continue &rarr;</button>
+  </div>
+
+  <!-- STEP 2: name -->
+  <div class="step" id="step-2">
+    <button class="back-link" onclick="goTo(1)">&larr; Back</button>
+    <p class="eyebrow">Step two</p>
+    <h1>Who's asking?</h1>
+    <p class="lede">Tell me your name so I know who I'm meeting.</p>
+    <div class="field">
+      <label for="applicant-name">Your name</label>
+      <input id="applicant-name" type="text" placeholder="e.g. Alex" oninput="checkName()">
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="name-continue" disabled onclick="goTo(3)">Continue &rarr;</button>
+  </div>
+
+  <!-- STEP 3: calendar -->
+  <div class="step" id="step-3">
+    <button class="back-link" onclick="goTo(2)">&larr; Back</button>
+    <p class="eyebrow">Step three</p>
+    <h1>Pick a day</h1>
+    <div class="cal-header"><span id="cal-month-label">September 2026</span></div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="chosen-date" id="chosen-date-label"></div>
+    <div class="times-wrap" id="times-wrap" style="display:none;">
+      <div class="times-label">Pick a time</div>
+      <div class="time-slots" id="time-slots"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="date-continue" disabled onclick="goTo(4)">Continue &rarr;</button>
+  </div>
+
+  <!-- STEP 4: details -->
+  <div class="step" id="step-4">
+    <button class="back-link" onclick="goTo(3)">&larr; Back</button>
+    <p class="eyebrow">Step four</p>
+    <h1>A few details</h1>
+    <div class="field">
+      <label for="plan-input">What do you have in mind for us?</label>
+      <textarea id="plan-input" placeholder="Dinner, a walk, something else entirely..."></textarea>
+    </div>
+    <div class="field">
+      <label for="phone-input">Phone number</label>
+      <input id="phone-input" type="tel" placeholder="e.g. 070 123 4567">
+    </div>
+    <div class="field">
+      <label for="email-input">Email</label>
+      <input id="email-input" type="email" placeholder="e.g. you@email.com">
+    </div>
+    <div class="toggle-row">
+      <span>Will you pick me up?</span>
+      <div class="toggle-btns" data-key="pickup">
+        <button onclick="setToggle('pickup','Yes',this)">Yes</button>
+        <button onclick="setToggle('pickup','No',this)">No</button>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <span>Will you bring flowers?</span>
+      <div class="toggle-btns" data-key="flowers">
+        <button onclick="setToggle('flowers','Yes',this)">Yes</button>
+        <button onclick="setToggle('flowers','No',this)">No</button>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="submitApplication()">Send application &rarr;</button>
+  </div>
+
+  <!-- STEP 5: confirmation -->
+  <div class="step" id="step-5">
+    <div class="seal">✓</div>
+    <p class="eyebrow">Application received</p>
+    <h1>Thank you, <span id="thanks-name">friend</span>.</h1>
+    <p class="lede">Your application is in. Cristina reviews these herself — expect an answer within <strong>24 hours</strong>.</p>
+    <div class="note" id="summary-note"></div>
+  </div>
+
+</div>
+
+<script>
+  /* ============================================================
+     AVAILABILITY — edit this section to control which days and
+     times can be booked. Add or remove times freely; a day with
+     an empty array (or in BLACKOUT_DAYS) shows as "full".
+     ============================================================ */
+  const WEEKDAY_TIMES = ['6:00 PM', '7:30 PM'];
+  const WEEKEND_TIMES = ['1:00 PM', '3:00 PM', '5:00 PM', '7:00 PM'];
+
+  // Override specific days (day number in September 2026 -> custom times)
+  const DAY_OVERRIDES = {
+    // 18: ['12:00 PM', '2:00 PM'],
+  };
+
+  // Days with no availability at all
+  const BLACKOUT_DAYS = [];
+  /* ============================================================ */
+
+  let state = { name: "", date: null, time: null, plan: "", pickup: null, flowers: null, phone: "", email: "" };
+  let bookedSlots = new Set(); // "day-time" strings already taken
+
+  function timesForDay(day, dowIndex){
+    if(BLACKOUT_DAYS.includes(day)) return [];
+    if(DAY_OVERRIDES[day]) return DAY_OVERRIDES[day];
+    const isWeekend = (dowIndex === 0 || dowIndex === 6);
+    return isWeekend ? WEEKEND_TIMES : WEEKDAY_TIMES;
+  }
+
+  function goTo(step){
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + step).classList.add('active');
+    const dots = document.querySelectorAll('#progress span');
+    dots.forEach((d,i) => { if(i < step) d.classList.add('done'); else d.classList.remove('done'); });
+    window.scrollTo(0,0);
+  }
+
+  function checkName(){
+    const val = document.getElementById('applicant-name').value.trim();
+    state.name = val;
+    document.getElementById('name-continue').disabled = val.length === 0;
+  }
+
+  // Calendar: September 2026, Tuesday 15th is "today" per context; disallow past days
+  function buildCalendar(){
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    const dows = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    dows.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+    // September 2026 starts on a Tuesday (Sep 1, 2026)
+    const firstDayIndex = 2; // 0=Su
+    const daysInMonth = 30;
+    const today = 15;
+    for(let i=0;i<firstDayIndex;i++){
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+    for(let d=1; d<=daysInMonth; d++){
+      const dowIndex = (firstDayIndex + (d - 1)) % 7;
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+
+      if(d < today){
+        el.classList.add('empty');
+        cell.appendChild(el);
+      } else {
+        const times = timesForDay(d, dowIndex);
+        const remaining = times.filter(t => !bookedSlots.has(d + '-' + t));
+        if(times.length === 0 || remaining.length === 0){
+          el.classList.add('full');
+          cell.appendChild(el);
+          const tag = document.createElement('div');
+          tag.className = 'day-full-tag';
+          tag.textContent = 'full';
+          cell.appendChild(tag);
+        } else {
+          el.onclick = () => selectDate(d, el, dowIndex);
+          cell.appendChild(el);
+        }
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function selectDate(day, el, dowIndex){
+    document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    state.date = day;
+    state.time = null;
+    document.getElementById('date-continue').disabled = true;
+    document.getElementById('chosen-date-label').textContent = 'September ' + day + ', 2026';
+
+    const times = timesForDay(day, dowIndex);
+    const wrap = document.getElementById('times-wrap');
+    const slotsEl = document.getElementById('time-slots');
+    slotsEl.innerHTML = '';
+    wrap.style.display = 'block';
+
+    times.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'time-slot';
+      btn.textContent = t;
+      const taken = bookedSlots.has(day + '-' + t);
+      if(taken){
+        btn.classList.add('taken');
+      } else {
+        btn.onclick = () => selectTime(t, btn);
+      }
+      slotsEl.appendChild(btn);
+    });
+  }
+
+  function selectTime(time, btn){
+    document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.time = time;
+    document.getElementById('date-continue').disabled = false;
+  }
+
+  async function loadBookedSlots(){
+    try{
+      const res = await fetch('/api/bookings');
+      const slots = await res.json();
+      slots.forEach(s => bookedSlots.add(s.day + '-' + s.time));
+    } catch(e){
+      console.error('Could not load booked slots', e);
+    }
+  }
+
+  function setToggle(key, value, btn){
+    state[key] = value;
+    const row = btn.closest('.toggle-btns');
+    row.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function submitApplication(){
+    state.plan = document.getElementById('plan-input').value.trim();
+    state.phone = document.getElementById('phone-input').value.trim();
+    state.email = document.getElementById('email-input').value.trim();
+
+    const sendBtn = document.querySelector('#step-4 .btn');
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+
+    try{
+      if(state.date && state.time){
+        const bookRes = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ day: state.date, time: state.time, name: state.name })
+        });
+        if(bookRes.status === 409){
+          alert('That time was just taken by someone else — pick another.');
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Send application →';
+          bookedSlots.add(state.date + '-' + state.time);
+          goTo(3);
+          buildCalendar();
+          return;
+        }
+      }
+
+      await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+    } catch(e){
+      console.error('Could not save application', e);
+    }
+
+    document.getElementById('thanks-name').textContent = state.name || 'friend';
+    const summary = [];
+    if(state.date && state.time) summary.push('September ' + state.date + ', 2026 at ' + state.time);
+    if(state.plan) summary.push('Plan: ' + state.plan);
+    if(state.pickup) summary.push('Pick-up: ' + state.pickup);
+    if(state.flowers) summary.push('Flowers: ' + state.flowers);
+    document.getElementById('summary-note').textContent = summary.join(' · ');
+
+    goTo(5);
+  }
+
+  async function init(){
+    await loadBookedSlots();
+    buildCalendar();
+  }
+  init();
+</script>
+
+</body>
+</html>

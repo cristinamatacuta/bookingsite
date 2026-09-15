@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Applications</title>
+<style>
+  body{ font-family: -apple-system, sans-serif; background:#FBF5F0; color:#3A2430; max-width:640px; margin:40px auto; padding:0 16px; }
+  h1{ font-size:22px; }
+  .row{ border-bottom:1px solid rgba(110,42,56,0.16); padding:16px 0; }
+  .row b{ display:block; margin-bottom:4px; }
+  .row div{ font-size:14px; color:#6E5460; line-height:1.5; }
+  input{ padding:8px; font-size:14px; margin-right:8px; }
+  button{ padding:8px 14px; background:#6E2A38; color:#fff; border:none; cursor:pointer; }
+</style>
+</head>
+<body>
+  <h1>Applications</h1>
+  <div>
+    <input id="key" type="password" placeholder="Admin key">
+    <button onclick="load()">View</button>
+  </div>
+  <div id="list"></div>
+  <script>
+    async function load(){
+      const key = document.getElementById('key').value.trim();
+      const res = await fetch('/api/applications?key=' + encodeURIComponent(key));
+      if(!res.ok){
+        document.getElementById('list').textContent = 'Wrong key, or nothing to show yet.';
+        return;
+      }
+      const apps = await res.json();
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      if(!apps.length){ list.textContent = 'No applications yet.'; return; }
+      apps.forEach(a => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<b>${a.name || 'Unknown'}</b>
+          <div>
+            ${a.date && a.time ? 'September ' + a.date + ', 2026 at ' + a.time + '<br>' : ''}
+            ${a.plan ? 'Plan: ' + a.plan + '<br>' : ''}
+            ${a.pickup ? 'Pick-up: ' + a.pickup + ' · ' : ''}${a.flowers ? 'Flowers: ' + a.flowers + '<br>' : ''}
+            ${a.phone ? 'Phone: ' + a.phone + '<br>' : ''}
+            ${a.email ? 'Email: ' + a.email : ''}
+          </div>`;
+        list.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>
