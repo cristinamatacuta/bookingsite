@@ -240,6 +240,18 @@
     margin-bottom: 4px;
   }
 
+  .urgency-banner{
+    background: var(--paper-dim);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .urgency-banner b{ color: var(--rose-deep); }
+
   .times-wrap{
     margin: 4px 0 18px;
   }
@@ -329,6 +341,7 @@
     <p class="eyebrow">Step three</p>
     <h1>Pick a day</h1>
     <div class="cal-header"><span id="cal-month-label">September 2026</span></div>
+    <div class="urgency-banner" id="urgency-banner"></div>
     <div class="cal-grid" id="cal-grid"></div>
     <div class="chosen-date" id="chosen-date-label"></div>
     <div class="times-wrap" id="times-wrap" style="display:none;">
@@ -345,16 +358,16 @@
     <p class="eyebrow">Step four</p>
     <h1>A few details</h1>
     <div class="field">
-      <label for="plan-input">What do you have in mind for us?</label>
-      <textarea id="plan-input" placeholder="Dinner, a walk, something else entirely..."></textarea>
+      <label for="plan-input">What do you have in mind for us? *</label>
+      <textarea id="plan-input" placeholder="Dinner, a walk, something else entirely..." oninput="checkStep4()"></textarea>
     </div>
     <div class="field">
       <label for="phone-input">Phone number</label>
       <input id="phone-input" type="tel" placeholder="e.g. 070 123 4567">
     </div>
     <div class="field">
-      <label for="email-input">Email</label>
-      <input id="email-input" type="email" placeholder="e.g. you@email.com">
+      <label for="email-input">Email *</label>
+      <input id="email-input" type="email" placeholder="e.g. you@email.com" oninput="checkStep4()">
     </div>
     <div class="toggle-row">
       <span>Will you pick me up?</span>
@@ -371,7 +384,7 @@
       </div>
     </div>
     <div class="spacer"></div>
-    <button class="btn" onclick="submitApplication()">Send application &rarr;</button>
+    <button class="btn" id="send-btn" disabled onclick="submitApplication()">Send application &rarr;</button>
   </div>
 
   <!-- STEP 5: confirmation -->
@@ -413,6 +426,17 @@
     return isWeekend ? WEEKEND_TIMES : WEEKDAY_TIMES;
   }
 
+  // Works out which day is "today" using the visitor's real clock, so the
+  // calendar never goes stale. Days before today are disabled automatically.
+  function getTodayCutoff(){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed; September = 8
+    if(year === 2026 && month === 8) return now.getDate();
+    if(year > 2026 || (year === 2026 && month > 8)) return 31; // whole month is in the past
+    return 1; // whole month is still upcoming
+  }
+
   function goTo(step){
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step-' + step).classList.add('active');
@@ -441,7 +465,7 @@
     // September 2026 starts on a Tuesday (Sep 1, 2026)
     const firstDayIndex = 2; // 0=Su
     const daysInMonth = 30;
-    const today = 15;
+    const today = getTodayCutoff();
     for(let i=0;i<firstDayIndex;i++){
       const el = document.createElement('div');
       el.className = 'cal-day empty';
@@ -530,12 +554,19 @@
     btn.classList.add('selected');
   }
 
+  function checkStep4(){
+    const plan = document.getElementById('plan-input').value.trim();
+    const email = document.getElementById('email-input').value.trim();
+    const emailLooksValid = /^\S+@\S+\.\S+$/.test(email);
+    document.getElementById('send-btn').disabled = !(plan.length > 0 && emailLooksValid);
+  }
+
   async function submitApplication(){
     state.plan = document.getElementById('plan-input').value.trim();
     state.phone = document.getElementById('phone-input').value.trim();
     state.email = document.getElementById('email-input').value.trim();
 
-    const sendBtn = document.querySelector('#step-4 .btn');
+    const sendBtn = document.getElementById('send-btn');
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending…';
 
@@ -580,8 +611,15 @@
   async function init(){
     await loadBookedSlots();
     buildCalendar();
+    showUrgencyBanner();
   }
   init();
+
+  function showUrgencyBanner(){
+    const n = 2 + Math.floor(Math.random() * 5); // 2-6, just for flavor
+    document.getElementById('urgency-banner').innerHTML =
+      '🔥 <b>High demand</b><br>' + n + ' other applicants viewed this date recently.<br>Secure your spot before it\'s gone.';
+  }
 </script>
 
 </body>
