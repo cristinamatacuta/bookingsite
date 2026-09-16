@@ -1,28 +1,53 @@
 // /api/applications
-// POST -> saves a full application (name, date, time, plan, pickup, flowers, phone, email)
-// GET  -> returns all applications, newest first (this is your private "inbox" —
-//         see the README for how to keep it just for you)
+// POST -> saves a full application
+// GET -> returns all applications, newest first
 
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
 
 export default async function handler(req, res) {
+
   if (req.method === 'POST') {
     const application = req.body || {};
     const stamp = Date.now();
+
     const key = `application:${stamp}`;
-    await kv.set(key, { ...application, submittedAt: stamp });
+
+    await redis.set(
+      key,
+      JSON.stringify({
+        ...application,
+        submittedAt: stamp
+      })
+    );
+
     return res.status(200).json({ ok: true });
   }
 
   if (req.method === 'GET') {
+
     const key = req.query.key;
+
     if (!process.env.ADMIN_KEY || key !== process.env.ADMIN_KEY) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const keys = await kv.keys('application:*');
-    const apps = keys.length ? await kv.mget(...keys) : [];
-    apps.sort((a, b) => (b?.submittedAt || 0) - (a?.submittedAt || 0));
-    return res.status(200).json(apps.filter(Boolean));
+
+    const keys = await redis.keys('application:*');
+
+    const values = keys.length
+      ? await redis.mget(...keys)
+      : [];
+
+    const apps = values
+      .filter(Boolean)
+      .map(value => JSON.parse(value));
+
+    apps.sort(
+      (a, b) => (b?.submittedAt || 0) - (a?.submittedAt || 0)
+    );
+
+    return res.status(200).json(apps);
   }
 
   res.setHeader('Allow', ['GET', 'POST']);
